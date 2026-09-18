@@ -1,0 +1,220 @@
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: Arial, sans-serif;
+  background: #080b1a;
+  color: #f1f5ff;
+}
+
+.app {
+  display: flex;
+  min-height: 100vh;
+}
+
+.sidebar {
+  width: 245px;
+  padding: 30px 20px;
+  background: #0d1126;
+  border-right: 1px solid #252b4a;
+}
+
+.sidebar h2 {
+  color: #8b7cff;
+  margin-bottom: 55px;
+}
+
+nav p {
+  padding: 14px;
+  margin: 8px 0;
+  color: #929bbd;
+  border-radius: 10px;
+}
+
+nav .active {
+  color: white;
+  background: linear-gradient(90deg, #5141c9, #30256e);
+}
+
+.network {
+  margin-top: 230px;
+  color: #aab3d5;
+  font-size: 13px;
+}
+
+.network span {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  background: #35d49a;
+  border-radius: 50%;
+  margin-right: 8px;
+}
+
+.network small {
+  display: block;
+  margin-top: 10px;
+  color: #35d49a;
+}
+
+.main {
+  flex: 1;
+  padding: 40px;
+}
+
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 35px;
+}
+
+header h1 {
+  font-size: 32px;
+}
+
+header p {
+  color: #929bbd;
+  margin-top: 8px;
+}
+
+button {
+  padding: 14px 22px;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #635bff, #9b5cff);
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 18px;
+}
+
+.stat-card,
+.panel {
+  padding: 24px;
+  background: #111731;
+  border: 1px solid #282f51;
+  border-radius: 16px;
+  box-shadow: 0 10px 30px #00000020;
+}
+
+.stat-card span {
+  color: #929bbd;
+  font-size: 14px;
+}
+
+.stat-card h2 {
+  font-size: 32px;
+  margin: 18px 0 10px;
+}
+
+.stat-card small {
+  color: #929bbd;
+}
+
+.green {
+  color: #35d49a !important;
+}
+
+.content-grid {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr;
+  gap: 22px;
+  margin-top: 25px;
+}
+
+.panel h3 {
+  margin-bottom: 25px;
+}
+
+.invoice,
+.blockchain-status {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 18px 0;
+  border-top: 1px solid #282f51;
+}
+
+.invoice p,
+.blockchain-status p {
+  color: #929bbd;
+  font-size: 13px;
+  margin-top: 8px;
+}
+
+.badge {
+  display: block;
+  margin-top: 10px;
+  padding: 5px 10px;
+  text-align: center;
+  border-radius: 20px;
+  font-size: 12px;
+}
+
+.paid {
+  color: #35d49a;
+  background: #173d38;
+}
+
+.status-icon {
+  display: grid;
+  place-items: center;
+  width: 45px;
+  height: 45px;
+  margin-right: 15px;
+  color: #35d49a;
+  background: #173d38;
+  border-radius: 50%;
+}
+
+.blockchain-status {
+  justify-content: flex-start;
+}
+
+.hash {
+  margin-top: 20px;
+  padding-top: 18px;
+  border-top: 1px solid #282f51;
+}
+
+.hash span {
+  color: #929bbd;
+  font-size: 13px;
+}
+
+.hash p {
+  margin-top: 10px;
+  color: #8b7cff;
+  font-size: 13px;
+}
+
+@media (max-width: 900px) {
+  .sidebar {
+    display: none;
+  }
+
+  .main {
+    padding: 20px;
+  }
+
+  .stats,
+  .content-grid {
+    grid-template-columns: 1fr;
+  }
+
+  header {
+    gap: 20px;
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
