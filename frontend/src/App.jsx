@@ -6,6 +6,7 @@ import {
   http,
   keccak256,
   toHex,
+  publicActions,
 } from "viem";
 
 import "./App.css";
@@ -29,10 +30,20 @@ const chain = {
   },
 };
 
-const client = createPublicClient({
-  chain,
-  transport: http("http://127.0.0.1:8545"),
-});
+// MetaMask-based client (works on Vercel, since there's no
+// direct network access to a localhost RPC from a deployed site)
+const getBlockchainClient = async () => {
+  if (!window.ethereum) {
+    throw new Error("Please install MetaMask");
+  }
+
+  const walletClient = createWalletClient({
+    chain,
+    transport: custom(window.ethereum),
+  });
+
+  return walletClient.extend(publicActions);
+};
 
 // ================= APP =================
 
@@ -202,6 +213,8 @@ async function loadBlockchainData() {
   try {
     setError("");
 
+    const client = await getBlockchainClient();
+
     const count = await client.readContract({
       address: contractAddress,
       abi: contractABI,
@@ -255,6 +268,8 @@ async function updateInvoiceStatus(functionName, invoiceId) {
       transport: custom(window.ethereum),
     });
 
+    const publicClient = walletClient.extend(publicActions);
+
     const [account] = await walletClient.requestAddresses();
 
     setError("Confirm transaction in MetaMask...");
@@ -270,7 +285,7 @@ async function updateInvoiceStatus(functionName, invoiceId) {
 
     setError("Waiting for confirmation...");
 
-    await client.waitForTransactionReceipt({ hash });
+    await publicClient.waitForTransactionReceipt({ hash });
 
     setError("Invoice status updated successfully!");
 
@@ -309,6 +324,8 @@ async function handleContinue() {
       transport: custom(window.ethereum),
     });
 
+    const publicClient = walletClient.extend(publicActions);
+
     const [account] = await walletClient.requestAddresses();
 
     const invoiceHash = keccak256(
@@ -333,7 +350,7 @@ async function handleContinue() {
 
     setError("Waiting for blockchain confirmation...");
 
-    await client.waitForTransactionReceipt({ hash });
+    await publicClient.waitForTransactionReceipt({ hash });
 
     setError("Invoice saved successfully!");
 
