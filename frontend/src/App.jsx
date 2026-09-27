@@ -197,148 +197,158 @@ function App() {
     }
   }
 
-  // Load all invoices
-  async function loadBlockchainData() {
-    try {
-      setError("");
+// Load all invoices
+async function loadBlockchainData() {
+  try {
+    setError("");
 
-      const count = await client.readContract({
+    const count = await client.readContract({
+      address: contractAddress,
+      abi: contractABI,
+      functionName: "invoiceCount",
+    });
+
+    const total = Number(count);
+    setTotalInvoices(total);
+
+    const allInvoices = [];
+
+    for (let i = 1; i <= total; i++) {
+      const data = await client.readContract({
         address: contractAddress,
         abi: contractABI,
-        functionName: "invoiceCount",
+        functionName: "getInvoice",
+        args: [BigInt(i)],
       });
 
-      const total = Number(count);
-      setTotalInvoices(total);
-
-      const allInvoices = [];
-
-      for (let i = 1; i <= total; i++) {
-        const data = await client.readContract({
-          address: contractAddress,
-          abi: contractABI,
-          functionName: "getInvoice",
-          args: [BigInt(i)],
-        });
-
-        allInvoices.push(data);
-      }
-
-      setInvoices(allInvoices);
-    } catch (err) {
-      console.error("Blockchain Error:", err);
-      setError(err.shortMessage || err.message);
+      allInvoices.push(data);
     }
+
+    setInvoices(allInvoices);
+  } catch (err) {
+    console.error("Blockchain Error:", err);
+    setError(err.shortMessage || err.message);
+  }
+}
+
+// Load blockchain data after login
+useEffect(() => {
+  if (isLoggedIn) {
+    loadBlockchainData();
+  }
+}, [isLoggedIn]);
+
+
+// ================= UPDATE INVOICE STATUS =================
+
+async function updateInvoiceStatus(functionName, invoiceId) {
+  if (!window.ethereum) {
+    setError("Please install MetaMask");
+    return;
   }
 
-  // Load blockchain data after login
-  useEffect(() => {
-    if (isLoggedIn) {
-      loadBlockchainData();
-    }
-  }, [isLoggedIn]);
+  try {
+    setError("Connecting wallet...");
 
-  // Update invoice status
-  async function updateInvoiceStatus(functionName, invoiceId) {
-    if (!window.ethereum) {
-      setError("Please install MetaMask");
-      return;
-    }
+    const walletClient = createWalletClient({
+      chain,
+      transport: custom(window.ethereum),
+    });
 
-    try {
-      setError("Confirm transaction in MetaMask...");
+    const [account] = await walletClient.requestAddresses();
 
-      const walletClient = createWalletClient({
-        chain,
-        transport: custom(window.ethereum),
-      });
+    setError("Confirm transaction in MetaMask...");
 
-      const [account] = await walletClient.requestAddresses();
+    const hash = await walletClient.writeContract({
+      address: contractAddress,
+      abi: contractABI,
+      functionName,
+      args: [BigInt(invoiceId)],
+      account,
+      gas: 500000n,
+    });
 
-      const hash = await walletClient.writeContract({
-        address: contractAddress,
-        abi: contractABI,
-        functionName,
-        args: [BigInt(invoiceId)],
-        account,
-      });
+    setError("Waiting for confirmation...");
 
-      setError("Waiting for confirmation...");
+    await client.waitForTransactionReceipt({ hash });
 
-      await client.waitForTransactionReceipt({ hash });
+    setError("Invoice status updated successfully!");
 
-      setError("Invoice status updated successfully!");
+    await loadBlockchainData();
 
-      await loadBlockchainData();
-    } catch (err) {
-      console.error(err);
-      setError(err.shortMessage || err.message);
-    }
+  } catch (err) {
+    console.error("Transaction Error:", err);
+    setError(err.shortMessage || err.message);
+  }
+}
+
+
+// ================= CREATE INVOICE =================
+
+async function handleContinue() {
+  if (!invoiceNumber || !supplierName || !amount) {
+    setError("Please fill in all fields");
+    return;
   }
 
-  // Create invoice
-  async function handleContinue() {
-    if (!invoiceNumber || !supplierName || !amount) {
-      setError("Please fill in all fields");
-      return;
-    }
-
-    if (Number(amount) <= 0) {
-      setError("Amount must be greater than zero");
-      return;
-    }
-
-    if (!window.ethereum) {
-      setError("Please install MetaMask");
-      return;
-    }
-
-    try {
-      setError("Connecting wallet...");
-
-      const walletClient = createWalletClient({
-        chain,
-        transport: custom(window.ethereum),
-      });
-
-      const [account] = await walletClient.requestAddresses();
-
-      const invoiceHash = keccak256(
-        toHex(`${invoiceNumber}-${supplierName}-${amount}`)
-      );
-
-      setError("Confirm the transaction in MetaMask...");
-
-      const hash = await walletClient.writeContract({
-        address: contractAddress,
-        abi: contractABI,
-        functionName: "createInvoice",
-        args: [
-          invoiceNumber.trim(),
-          supplierName.trim(),
-          BigInt(amount),
-          invoiceHash,
-        ],
-        account,
-      });
-
-      setError("Waiting for blockchain confirmation...");
-
-      await client.waitForTransactionReceipt({ hash });
-
-      setError("Invoice saved successfully!");
-
-      setInvoiceNumber("");
-      setSupplierName("");
-      setAmount("");
-      setShowForm(false);
-
-      await loadBlockchainData();
-    } catch (err) {
-      console.error("Transaction Error:", err);
-      setError(err.shortMessage || err.message);
-    }
+  if (Number(amount) <= 0) {
+    setError("Amount must be greater than zero");
+    return;
   }
+
+  if (!window.ethereum) {
+    setError("Please install MetaMask");
+    return;
+  }
+
+  try {
+    setError("Connecting wallet...");
+
+    const walletClient = createWalletClient({
+      chain,
+      transport: custom(window.ethereum),
+    });
+
+    const [account] = await walletClient.requestAddresses();
+
+    const invoiceHash = keccak256(
+      toHex(`${invoiceNumber}-${supplierName}-${amount}`)
+    );
+
+    setError("Confirm the transaction in MetaMask...");
+
+    const hash = await walletClient.writeContract({
+      address: contractAddress,
+      abi: contractABI,
+      functionName: "createInvoice",
+      args: [
+        invoiceNumber.trim(),
+        supplierName.trim(),
+        BigInt(amount),
+        invoiceHash,
+      ],
+      account,
+      gas: 1000000n,
+    });
+
+    setError("Waiting for blockchain confirmation...");
+
+    await client.waitForTransactionReceipt({ hash });
+
+    setError("Invoice saved successfully!");
+
+    setInvoiceNumber("");
+    setSupplierName("");
+    setAmount("");
+    setShowForm(false);
+
+    await loadBlockchainData();
+
+  } catch (err) {
+    console.error("Transaction Error:", err);
+    setError(err.shortMessage || err.message);
+  }
+}
 
   // ================= COUNTS =================
 
